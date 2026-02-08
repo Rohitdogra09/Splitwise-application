@@ -1,7 +1,7 @@
 package com.splitwise.splitwise.backend.entity;
 
 import jakarta.persistence.*;
-import jdk.jfr.MemoryAddress;
+
 import lombok.*;
 
 @Entity
