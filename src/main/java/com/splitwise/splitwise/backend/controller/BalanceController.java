@@ -6,6 +6,7 @@ import com.splitwise.splitwise.backend.entity.Expense;
 import com.splitwise.splitwise.backend.entity.ExpenseSplit;
 import com.splitwise.splitwise.backend.repository.ExpenseRepository;
 import com.splitwise.splitwise.backend.repository.ExpenseSplitRepository;
+import com.splitwise.splitwise.backend.repository.PaymentRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,11 +22,14 @@ public class BalanceController {
 
     private final ExpenseRepository expenseRepository;
     private final ExpenseSplitRepository expenseSplitRepository;
+    private final PaymentRepository paymentRepository;
 
     public BalanceController(ExpenseRepository expenseRepository,
-                             ExpenseSplitRepository expenseSplitRepository){
+                             ExpenseSplitRepository expenseSplitRepository,
+                             PaymentRepository paymentRepository){
         this.expenseRepository=expenseRepository;
         this.expenseSplitRepository=expenseSplitRepository;
+        this.paymentRepository=paymentRepository;
     }
 
     @GetMapping("/balances")
@@ -54,6 +58,22 @@ public class BalanceController {
             Long uid=s.getUser().getId();
             nameMap.put(uid, s.getUser().getName());
             shareMap.put(uid, shareMap.getOrDefault(uid, 0.0)+s.getShareAmount());
+
+        }
+
+        var payments= paymentRepository.findByGroupId(groupId);
+        for(var p : payments){
+            Long fromId=p.getFromUser().getId();
+            Long toId=p.getToUser().getId();
+
+            nameMap.put(fromId, p.getFromUser().getName());
+            nameMap.put(toId, p.getToUser().getName());
+
+            // paying reduces what "from" owes _-> increses from's balance
+            paidMap.put(fromId, paidMap.getOrDefault(fromId,0.0)+p.getAmount());
+
+            //Receiving means they are owed less-> decreases to's balances
+            paidMap.put(toId, paidMap.getOrDefault(toId,0.0)-p.getAmount());
 
         }
 
