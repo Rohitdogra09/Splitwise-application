@@ -7,15 +7,12 @@ import com.splitwise.splitwise.backend.entity.ExpenseSplit;
 import com.splitwise.splitwise.backend.repository.ExpenseRepository;
 import com.splitwise.splitwise.backend.repository.ExpenseSplitRepository;
 import com.splitwise.splitwise.backend.repository.PaymentRepository;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
 
-
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/groups/{groupId}")
 public class BalanceController {
