@@ -13,13 +13,13 @@ body {
   margin: 0;
   font-family: "Segoe UI", system-ui;
   background: var(--bg);
-  height: 100vh;
-  overflow: hidden;   /* 🚀 no scrolling */
+  min-height: 100vh;   /* allow full height */
+  overflow-y: auto;    /* enable page scroll */
 }
 
 .container {
   padding: 20px;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -48,7 +48,7 @@ body {
   padding: 15px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  
 }
 
 .card h2 {
@@ -84,7 +84,8 @@ body {
   list-style: none;
   padding: 0;
   margin: 8px 0 0;
-  overflow-y: auto;
+  overflow-y: auto;      
+  flex: 1;
   font-size: 14px;
 }
 
