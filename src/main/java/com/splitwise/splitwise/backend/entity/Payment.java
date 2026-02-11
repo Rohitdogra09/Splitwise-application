@@ -1,6 +1,5 @@
 package com.splitwise.splitwise.backend.entity;
 
-import com.splitwise.splitwise.backend.controller.GroupController;
 import jakarta.persistence.*;
 import lombok.*;
 

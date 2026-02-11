@@ -1,6 +1,7 @@
 package com.splitwise.splitwise.backend.controller;
 
 
+import com.splitwise.splitwise.backend.dto.SettlementDto;
 import com.splitwise.splitwise.backend.dto.UserBalanceDto;
 import com.splitwise.splitwise.backend.entity.Expense;
 import com.splitwise.splitwise.backend.entity.ExpenseSplit;
@@ -98,51 +99,59 @@ public class BalanceController {
 
     }
     @GetMapping("/settlements")
-    public java.util.List<com.splitwise.splitwise.backend.dto.SettlementDto> getSettlements(@PathVariable Long groupId){
+    public List<SettlementDto> getSettlements(@PathVariable Long groupId) {
 
-        //reuse balances method logic
         List<UserBalanceDto> balances = getBalances(groupId);
 
-        //creditors: balance>0, debtors: balance <0
-        java.util.List<UserBalanceDto> creditors = balances.stream()
-                .filter(b -> b.balance() > 0.0)
-                .map(b -> new UserBalanceDto(b.userId(), b.name(),b.balance()))
-                .toList();
+        // IMPORTANT: make these lists MUTABLE (ArrayList), not stream().toList()
+        List<UserBalanceDto> creditors = new java.util.ArrayList<>();
+        List<UserBalanceDto> debtors = new java.util.ArrayList<>();
 
-        java.util.List<UserBalanceDto> debtors = balances.stream()
-                .filter(b-> b.balance()<0.0)
-                .map(b -> new UserBalanceDto(b.userId(), b.name(), -b.balance()))
-                .toList();
+        double EPS = 0.0001;
 
-        java.util.List<com.splitwise.splitwise.backend.dto.SettlementDto> result = new java.util.ArrayList<>();
+        for (UserBalanceDto b : balances) {
+            if (b.balance() > EPS) {
+                creditors.add(new UserBalanceDto(b.userId(), b.name(), b.balance()));
+            } else if (b.balance() < -EPS) {
+                debtors.add(new UserBalanceDto(b.userId(), b.name(), -b.balance())); // store positive debt
+            }
+        }
 
-        int i =0, j=0;
+        List<SettlementDto> result = new java.util.ArrayList<>();
 
-        while(i<debtors.size() && j< creditors.size()){
+        int i = 0, j = 0;
+        while (i < debtors.size() && j < creditors.size()) {
             UserBalanceDto debtor = debtors.get(i);
             UserBalanceDto creditor = creditors.get(j);
 
             double amount = Math.min(debtor.balance(), creditor.balance());
-            amount= Math.round(amount*100)/100;
+            amount = Math.round(amount * 100.0) / 100.0;
 
-            result.add(new com.splitwise.splitwise.backend.dto.SettlementDto(
-                    debtor.userId(), debtor.name(),
-                    creditor.userId(), creditor.name(),
-                    amount
-            ));
+            if (amount > EPS) {
+                result.add(new SettlementDto(
+                        debtor.userId(), debtor.name(),
+                        creditor.userId(), creditor.name(),
+                        amount
+                ));
+            }
 
-            double debtorRemaining = debtor.balance()-amount;
-            double creditorRemaining = creditor.balance()-amount;
+            double debtorRemaining = debtor.balance() - amount;
+            double creditorRemaining = creditor.balance() - amount;
 
-            //move pointers
-
-            if(debtorRemaining <=0.0001)
+            if (debtorRemaining <= EPS) {
                 i++;
-            else debtors.set(i, new UserBalanceDto(debtor.userId(), debtor.name(), debtorRemaining));
+            } else {
+                debtors.set(i, new UserBalanceDto(debtor.userId(), debtor.name(), debtorRemaining));
+            }
 
-            if(creditorRemaining<=0.0001) j++;
-            else creditors.set(j, new UserBalanceDto(creditor.userId(), creditor.name(),creditorRemaining));
+            if (creditorRemaining <= EPS) {
+                j++;
+            } else {
+                creditors.set(j, new UserBalanceDto(creditor.userId(), creditor.name(), creditorRemaining));
+            }
         }
+
         return result;
     }
+
 }
